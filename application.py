@@ -7,8 +7,8 @@ from sklearn.preprocessing import StandardScaler
 application = Flask(__name__)
 app = application
 
-ridge_model = pickle.load(open("ridgereg.pkl", "rb"))
-standard_scaler = pickle.load(open("scaler.pkl", "rb"))
+ridge_model = pickle.load(open("models/ridgereg.pkl", "rb"))
+standard_scaler = pickle.load(open("models/scaler.pkl", "rb"))
 
 @app.route('/')
 def index():
