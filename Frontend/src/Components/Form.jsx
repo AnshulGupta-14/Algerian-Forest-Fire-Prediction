@@ -29,7 +29,7 @@ export default function PredictionForm() {
     setPrediction(null);
 
     try {
-      const response = await fetch("http://localhost:5000/", {
+      const response = await fetch("https://algerian-forest-fire-prediction-j2i8.onrender.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -91,7 +91,13 @@ export default function PredictionForm() {
                   : "#dc2626" // red extreme
             }}
         >
-            FWI Prediction: {prediction}
+            {prediction < 5
+              ? "Low Risk of fire"
+              : prediction < 15
+              ? "Moderate Risk of fire"
+              : prediction < 30
+              ? "High Risk of fire"
+              : "Extreme Risk of fire"}
         </div>
       )}
       {error && (
