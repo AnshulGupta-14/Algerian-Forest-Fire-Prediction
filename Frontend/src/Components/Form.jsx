@@ -15,6 +15,7 @@ export default function PredictionForm() {
 
   const [prediction, setPrediction] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -33,7 +34,7 @@ export default function PredictionForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
-      });
+      }, setLoading(true));
 
       const data = await response.json();
 
@@ -45,6 +46,7 @@ export default function PredictionForm() {
     } catch (err) {
       setError(err.message);
     }
+    setLoading(false);
   };
 
   return (
@@ -55,7 +57,7 @@ export default function PredictionForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {Object.keys(formData).map((field) => (
           <div key={field}>
-            <label className="block font-medium text-gray-700 mb-1">
+            <label className="block font-medium text-gray-800 mb-1">
               {field}:
             </label>
             <input
@@ -65,7 +67,7 @@ export default function PredictionForm() {
               value={formData[field]}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-300 text-gray-800"
             />
           </div>
         ))}
@@ -73,8 +75,9 @@ export default function PredictionForm() {
         <button
           type="submit"
           className="w-full py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring focus:ring-blue-300"
+          disabled={loading}
         >
-          Predict
+          {loading ? "Predicting..." : 'Predict'}
         </button>
       </form>
 
