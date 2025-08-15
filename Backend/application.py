@@ -38,7 +38,7 @@ def predict_datapoint():
             )
             result = ridge_model.predict(new_data)
 
-            return jsonify(prediction=result[0])
+            return jsonify(prediction= 0 if result[0] < 0 else result[0])
         except Exception as e:
             return jsonify(error=str(e)), 400
 
