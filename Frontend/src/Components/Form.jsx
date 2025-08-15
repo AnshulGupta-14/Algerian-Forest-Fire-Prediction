@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PredictionResultModal from "./PredictionResultModal.jsx";
+import Link from "next/link.js";
 
 export default function PredictionForm() {
   const [formData, setFormData] = useState({
@@ -211,12 +212,12 @@ export default function PredictionForm() {
       )}
 
       <div className="mt-6 text-center">
-        <a
+        <Link
           href="/dashboard"
           className="text-blue-400 hover:text-blue-300 text-sm font-medium"
         >
           View your prediction history →
-        </a>
+        </Link>
       </div>
 
       <PredictionResultModal

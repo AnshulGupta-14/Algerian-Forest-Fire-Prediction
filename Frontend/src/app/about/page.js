@@ -1,5 +1,6 @@
 "use client";
 import Navigation from "@/Components/Navigation.jsx";
+import Link from "next/link";
 
 function AboutPage() {
   return (
@@ -85,26 +86,26 @@ function AboutPage() {
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <p className="text-sm text-gray-500 mb-3">Quick Navigation:</p>
                 <div className="flex flex-wrap justify-center gap-3">
-                  <a 
+                  <Link 
                     href="/" 
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline transition-colors duration-200"
                   >
                     ← Back to Home
-                  </a>
+                  </Link>
                   <span className="text-gray-400">•</span>
-                  <a 
+                  <Link 
                     href="/dashboard" 
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline transition-colors duration-200"
                   >
                     View Dashboard
-                  </a>
+                  </Link>
                   <span className="text-gray-400">•</span>
-                  <a 
+                  <Link 
                     href="/" 
                     className="text-blue-600 hover:text-blue-800 text-sm font-medium hover:underline transition-colors duration-200"
                   >
                     Make Prediction
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
