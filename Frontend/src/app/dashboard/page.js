@@ -7,73 +7,61 @@ function DashboardPage() {
   const [predictions, setPredictions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [gsap, setGsap] = useState(null);
-  
-  // Refs for sections
+
+  // Refs
   const summaryRef = useRef(null);
   const chartsRef = useRef(null);
   const historyRef = useRef(null);
 
-  // Load GSAP dynamically to prevent SSR issues
+  // Load GSAP dynamically
   useEffect(() => {
     const loadGSAP = async () => {
       try {
-        const { gsap: gsapModule, ScrollToPlugin } = await import('gsap');
+        const { gsap: gsapModule, ScrollToPlugin } = await import("gsap");
         gsapModule.registerPlugin(ScrollToPlugin);
         setGsap(gsapModule);
       } catch (error) {
-        console.error('Failed to load GSAP:', error);
+        console.error("Failed to load GSAP:", error);
       }
     };
-    
     loadGSAP();
 
-    // Cleanup function to prevent memory leaks
     return () => {
-      if (gsap) {
-        // Kill any ongoing GSAP animations
-        gsap.killTweensOf(window);
-      }
+      if (gsap) gsap.killTweensOf(window);
     };
   }, []);
 
-  // Load user's real predictions from localStorage
+  // Load localStorage predictions
   useEffect(() => {
-    const loadPredictions = () => {
-      try {
-        const savedPredictions = localStorage.getItem('forestFirePredictions');
-        if (savedPredictions) {
-          const parsedPredictions = JSON.parse(savedPredictions);
-          setPredictions(parsedPredictions);
-        } else {
-          setPredictions([]);
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error loading predictions:', error);
-        setPredictions([]);
-        setIsLoading(false);
+    try {
+      const savedPredictions = localStorage.getItem("forestFirePredictions");
+      if (savedPredictions) {
+        setPredictions(JSON.parse(savedPredictions));
       }
-    };
-
-    loadPredictions();
+    } catch (error) {
+      console.error("Error loading predictions:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Memoized chart data generation to prevent unnecessary recalculations
+  // Chart data
   const chartData = useMemo(() => {
-    if (predictions.length === 0) return { temperatureTrend: [], predictionTrend: [], riskDistribution: [] };
+    if (predictions.length === 0)
+      return { temperatureTrend: [], predictionTrend: [], riskDistribution: [] };
 
-    const last5Predictions = predictions.slice(0, 5).reverse();
-    
-    const temperatureTrend = last5Predictions.map((pred, index) => ({
-      x: index + 1,
+    const last5 = predictions.slice(0, 5).reverse();
+
+    const temperatureTrend = last5.map((pred, i) => ({
+      x: i + 1,
       y: pred.temperature,
-      label: pred.date
+      label: pred.date,
     }));
 
-    const predictionTrend = last5Predictions.map((pred, index) => ({
-      x: index + 1,
+    const predictionTrend = last5.map((pred, i) => ({
+      x: i + 1,
       y: pred.prediction,
-      label: pred.date
+      label: pred.date,
     }));
 
     const riskCounts = predictions.reduce((acc, pred) => {
@@ -84,122 +72,102 @@ function DashboardPage() {
     const riskDistribution = Object.entries(riskCounts).map(([risk, count]) => ({
       x: risk,
       y: count,
-      label: risk
+      label: risk,
     }));
 
     return { temperatureTrend, predictionTrend, riskDistribution };
   }, [predictions]);
 
-  // Memoized summary statistics to prevent recalculation
+  // Summary
   const summaryStats = useMemo(() => {
     if (predictions.length === 0) {
-      return {
-        total: 0,
-        average: 0,
-        highest: 0,
-        lowest: 0
-      };
+      return { total: 0, average: 0, highest: 0, lowest: 0 };
     }
-
-    const values = predictions.map(p => p.prediction);
+    const values = predictions.map((p) => p.prediction);
     return {
       total: predictions.length,
-      average: (values.reduce((sum, val) => sum + val, 0) / values.length).toFixed(1),
+      average: (values.reduce((s, v) => s + v, 0) / values.length).toFixed(1),
       highest: Math.max(...values).toFixed(1),
-      lowest: Math.min(...values).toFixed(1)
+      lowest: Math.min(...values).toFixed(1),
     };
   }, [predictions]);
 
-  // Memoized risk color functions to prevent recreation
+  // Risk styles
   const getRiskColor = useCallback((risk) => {
     switch (risk) {
-      case "LOW": return "text-green-600";
-      case "MEDIUM": return "text-yellow-600";
-      case "HIGH": return "text-orange-600";
-      case "EXTREME": return "text-red-600";
-      default: return "text-gray-600";
+      case "LOW":
+        return "text-green-400";
+      case "MEDIUM":
+        return "text-yellow-400";
+      case "HIGH":
+        return "text-orange-400";
+      case "EXTREME":
+        return "text-red-400";
+      default:
+        return "text-gray-400";
     }
   }, []);
 
   const getRiskBgColor = useCallback((risk) => {
     switch (risk) {
-      case "LOW": return "bg-green-100";
-      case "MEDIUM": return "bg-yellow-100";
-      case "HIGH": return "bg-orange-100";
-      case "EXTREME": return "bg-red-100";
-      default: return "bg-gray-100";
+      case "LOW":
+        return "bg-green-500/20";
+      case "MEDIUM":
+        return "bg-yellow-500/20";
+      case "HIGH":
+        return "bg-orange-500/20";
+      case "EXTREME":
+        return "bg-red-500/20";
+      default:
+        return "bg-gray-500/20";
     }
   }, []);
 
-  // Optimized scroll functions with useCallback
-  const scrollToSection = useCallback((sectionRef, offset = 80) => {
-    if (sectionRef.current && gsap && gsap.to && gsap.ScrollToPlugin) {
-      try {
-        gsap.to(window, {
-          duration: 1.2,
-          scrollTo: {
-            y: sectionRef.current,
-            offsetY: offset
-          },
-          ease: "power2.out"
-        });
-      } catch (error) {
-        console.error('GSAP scrollTo error:', error);
-        fallbackScrollToSection(sectionRef, offset);
-      }
-    } else {
-      fallbackScrollToSection(sectionRef, offset);
-    }
-  }, [gsap]);
-
-  const fallbackScrollToSection = useCallback((sectionRef, offset = 80) => {
-    if (sectionRef.current) {
-      try {
-        const safeOffset = typeof offset === 'number' && !isNaN(offset) ? offset : 80;
-        
-        sectionRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start',
-          inline: 'nearest'
-        });
-        
-        setTimeout(() => {
-          try {
-            window.scrollBy({
-              top: -safeOffset,
-              behavior: 'smooth'
-            });
-          } catch (scrollByError) {
-            window.scrollBy(0, -safeOffset);
-          }
-        }, 100);
-        
-      } catch (error) {
-        console.error('Fallback scroll error:', error);
+  // Smooth scroll
+  const scrollToSection = useCallback(
+    (sectionRef, offset = 80) => {
+      if (sectionRef.current && gsap && gsap.to && gsap.ScrollToPlugin) {
         try {
-          sectionRef.current.scrollIntoView();
-        } catch (finalError) {
-          console.error('Final scroll fallback error:', finalError);
+          gsap.to(window, {
+            duration: 1.2,
+            scrollTo: { y: sectionRef.current, offsetY: offset },
+            ease: "power2.out",
+          });
+        } catch {
+          sectionRef.current.scrollIntoView({ behavior: "smooth" });
         }
+      } else {
+        sectionRef.current?.scrollIntoView({ behavior: "smooth" });
       }
-    }
-  }, []);
+    },
+    [gsap]
+  );
 
-  // Memoized scroll functions
-  const scrollToSummary = useCallback(() => scrollToSection(summaryRef, 80), [scrollToSection]);
-  const scrollToCharts = useCallback(() => scrollToSection(chartsRef, 80), [scrollToSection]);
-  const scrollToHistory = useCallback(() => scrollToSection(historyRef, 80), [scrollToSection]);
+  const scrollToSummary = useCallback(
+    () => scrollToSection(summaryRef, 80),
+    [scrollToSection]
+  );
+  const scrollToCharts = useCallback(
+    () => scrollToSection(chartsRef, 80),
+    [scrollToSection]
+  );
+  const scrollToHistory = useCallback(
+    () => scrollToSection(historyRef, 80),
+    [scrollToSection]
+  );
 
-  // Show loading state while GSAP is loading
+  // Loading
   if (isLoading || !gsap) {
     return (
       <div>
         <Navigation />
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-[#0d1117] flex items-center justify-center text-[#c9d1d9]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">
-              {isLoading ? 'Loading your predictions...' : 'Loading smooth scrolling...'}
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#58a6ff] mx-auto"></div>
+            <p className="mt-4 text-[#8b949e]">
+              {isLoading
+                ? "Loading your predictions..."
+                : "Loading smooth scrolling..."}
             </p>
           </div>
         </div>
@@ -207,23 +175,22 @@ function DashboardPage() {
     );
   }
 
-  // If no predictions exist, show empty state
+  // Empty state
   if (predictions.length === 0) {
     return (
       <div>
         <Navigation />
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#0d1117] py-8 px-4 sm:px-6 lg:px-8 text-[#c9d1d9]">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="bg-white rounded-lg shadow p-12">
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg shadow p-12">
               <div className="text-6xl mb-6">🔥</div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                No Predictions Yet
-              </h1>
-              <p className="text-lg text-gray-600 mb-8">
-                You haven't made any forest fire predictions yet. Make your first prediction to see your history here!
+              <h1 className="text-3xl font-bold mb-4">No Predictions Yet</h1>
+              <p className="text-lg text-[#8b949e] mb-8">
+                You haven't made any forest fire predictions yet. Make your
+                first prediction to see your history here!
               </p>
-              <button 
-                onClick={() => window.location.href = '/'}
+              <button
+                onClick={() => (window.location.href = "/")}
                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Make Your First Prediction
@@ -235,68 +202,80 @@ function DashboardPage() {
     );
   }
 
+  // Main dashboard
   return (
     <div>
       <Navigation />
-      <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-[#0d1117] py-8 px-4 sm:px-6 lg:px-8 text-[#c9d1d9]">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl font-bold mb-4">
               Your Forest Fire Predictions
             </h1>
-            <p className="text-lg text-gray-600 mb-6">
+            <p className="text-lg text-[#8b949e] mb-6">
               Track your prediction history and analyze trends
             </p>
-            
-            {/* Quick Navigation with GSAP */}
+
+            {/* Quick Nav */}
             <div className="flex flex-wrap justify-center gap-3">
-              <button 
+              <button
                 onClick={scrollToSummary}
-                className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+                className="bg-[#21262d] hover:bg-[#30363d] text-[#58a6ff] px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
               >
                 📊 Summary
               </button>
-              <button 
+              <button
                 onClick={scrollToCharts}
-                className="bg-green-100 hover:bg-green-200 text-green-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+                className="bg-[#21262d] hover:bg-[#30363d] text-green-400 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
               >
                 📈 Charts
               </button>
-              <button 
+              <button
                 onClick={scrollToHistory}
-                className="bg-purple-100 hover:bg-purple-200 text-purple-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+                className="bg-[#21262d] hover:bg-[#30363d] text-purple-400 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300"
               >
                 📋 History
               </button>
             </div>
           </div>
 
-          {/* Summary Cards */}
-          <div ref={summaryRef} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-105 card">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Total Predictions</h3>
-              <div className="text-3xl font-bold text-blue-600">{summaryStats.total}</div>
+          {/* Summary */}
+          <div
+            ref={summaryRef}
+            className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+          >
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-2">Total Predictions</h3>
+              <div className="text-3xl font-bold text-[#58a6ff]">
+                {summaryStats.total}
+              </div>
             </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-105 card">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Average Risk</h3>
-              <div className="text-3xl font-bold text-orange-600">{summaryStats.average}</div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-2">Average Risk</h3>
+              <div className="text-3xl font-bold text-orange-400">
+                {summaryStats.average}
+              </div>
             </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-105 card">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Highest Risk</h3>
-              <div className="text-3xl font-bold text-red-600">{summaryStats.highest}</div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-2">Highest Risk</h3>
+              <div className="text-3xl font-bold text-red-400">
+                {summaryStats.highest}
+              </div>
             </div>
-            
-            <div className="bg-white rounded-lg shadow p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-105 card">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Lowest Risk</h3>
-              <div className="text-3xl font-bold text-green-600">{summaryStats.lowest}</div>
+            <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
+              <h3 className="text-lg font-semibold mb-2">Lowest Risk</h3>
+              <div className="text-3xl font-bold text-green-400">
+                {summaryStats.lowest}
+              </div>
             </div>
           </div>
 
           {/* Charts */}
-          <div ref={chartsRef} className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div
+            ref={chartsRef}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"
+          >
             <DashboardChart
               data={chartData.temperatureTrend}
               type="line"
@@ -320,45 +299,66 @@ function DashboardPage() {
             />
           </div>
 
-          {/* Predictions Table */}
-          <div ref={historyRef} className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Your Prediction History</h2>
-            <div className="overflow-x-auto dashboard-table custom-scrollbar">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+          {/* Table */}
+          <div
+            ref={historyRef}
+            className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 mb-8"
+          >
+            <h2 className="text-2xl font-semibold mb-4">
+              Your Prediction History
+            </h2>
+            <div className="p-2 overflow-x-auto">
+              <table className="min-w-full divide-y divide-[#30363d]">
+                <thead className="bg-[#0d1117]">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Humidity</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wind</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rainfall</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Score</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+                    {[
+                      "Date",
+                      "Temperature",
+                      "Humidity",
+                      "Wind",
+                      "Rainfall",
+                      "Risk Score",
+                      "Risk Level",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-3 text-left text-xs font-medium text-[#8b949e] uppercase tracking-wider"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-[#30363d]">
                   {predictions.map((prediction) => (
-                    <tr key={prediction.id} className="hover:bg-gray-50 transition-all duration-200 hover:scale-[1.01] table-row">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <tr
+                      key={prediction.id}
+                      className="hover:bg-[#21262d] transition-all duration-200"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {prediction.date}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {parseFloat(prediction.temperature).toFixed(1)}°C
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {parseFloat(prediction.humidity).toFixed(1)}%
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {parseFloat(prediction.windSpeed).toFixed(1)} km/h
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {parseFloat(prediction.rainfall).toFixed(1)} mm
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
                         {parseFloat(prediction.prediction).toFixed(1)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskBgColor(prediction.risk)} ${getRiskColor(prediction.risk)}`}>
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskBgColor(
+                            prediction.risk
+                          )} ${getRiskColor(prediction.risk)}`}
+                        >
                           {prediction.risk}
                         </span>
                       </td>
@@ -369,17 +369,17 @@ function DashboardPage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+            <button
+              onClick={() => (window.location.href = "/")}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300"
             >
               Make New Prediction
             </button>
-            <button 
-              onClick={() => window.location.href = '/about'}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95"
+            <button
+              onClick={() => (window.location.href = "/about")}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300"
             >
               Learn More
             </button>

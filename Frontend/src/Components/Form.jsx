@@ -22,12 +22,11 @@ export default function PredictionForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    const numValue = parseFloat(value);
 
-    if (['Temperature', 'RH', 'Ws', 'Rain', 'FFMC', 'DMC', 'ISI', 'Classes'].includes(name)) {
-      const numValue = parseFloat(value);
-      if (value !== '' && (isNaN(numValue) || numValue < 0)) {
-        return;
-      }
+    // prevent negative values
+    if (["Temperature", "RH", "Ws", "Rain", "FFMC", "DMC", "ISI", "Classes"].includes(name)) {
+      if (value !== "" && isNaN(numValue)) return;
     }
 
     setFormData((prev) => ({
@@ -38,36 +37,33 @@ export default function PredictionForm() {
 
   const savePredictionToHistory = (predictionData, region) => {
     try {
-      const existingPredictions = localStorage.getItem('forestFirePredictions');
+      const existingPredictions = localStorage.getItem("forestFirePredictions");
       let predictions = existingPredictions ? JSON.parse(existingPredictions) : [];
 
       const newPrediction = {
         id: Date.now(),
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString().split("T")[0],
         temperature: parseFloat(formData.Temperature) || 0,
         humidity: parseFloat(formData.RH) || 0,
         windSpeed: parseFloat(formData.Ws) || 0,
         rainfall: parseFloat(formData.Rain) || 0,
         prediction: predictionData.prediction,
         risk: getRiskLevel(predictionData.prediction),
-        region: region || 'Algeria'
+        region: region || "Algeria",
       };
 
       predictions.unshift(newPrediction);
-      // if (predictions.length > 20) {
-      //   predictions = predictions.slice(0, 20);
-      // }
-      localStorage.setItem('forestFirePredictions', JSON.stringify(predictions));
+      localStorage.setItem("forestFirePredictions", JSON.stringify(predictions));
     } catch (error) {
-      console.error('Error saving prediction to history:', error);
+      console.error("Error saving prediction to history:", error);
     }
   };
 
   const getRiskLevel = (predictionValue) => {
-    if (predictionValue < 5) return 'LOW';
-    if (predictionValue < 15) return 'MEDIUM';
-    if (predictionValue < 30) return 'HIGH';
-    return 'EXTREME';
+    if (predictionValue < 5) return "LOW";
+    if (predictionValue < 15) return "MEDIUM";
+    if (predictionValue < 30) return "HIGH";
+    return "EXTREME";
   };
 
   const handleSubmit = async (e) => {
@@ -76,8 +72,8 @@ export default function PredictionForm() {
     setPrediction(null);
     setLoading(true);
 
-    if (!formData.region || formData.region.trim() === '') {
-      setError('Please select a region');
+    if (!formData.region || formData.region.trim() === "") {
+      setError("Please select a region");
       setLoading(false);
       return;
     }
@@ -92,9 +88,17 @@ export default function PredictionForm() {
       const isi = parseFloat(formData.ISI);
       const classes = parseFloat(formData.Classes);
 
-      if (isNaN(temperature) || isNaN(rh) || isNaN(ws) || isNaN(rain) ||
-        isNaN(ffmc) || isNaN(dmc) || isNaN(isi) || isNaN(classes)) {
-        setError('Please fill in all numeric fields with valid numbers');
+      if (
+        isNaN(temperature) ||
+        isNaN(rh) ||
+        isNaN(ws) ||
+        isNaN(rain) ||
+        isNaN(ffmc) ||
+        isNaN(dmc) ||
+        isNaN(isi) ||
+        isNaN(classes)
+      ) {
+        setError("Please fill in all numeric fields with valid numbers");
         setLoading(false);
         return;
       }
@@ -108,14 +112,17 @@ export default function PredictionForm() {
         DMC: dmc,
         ISI: isi,
         Classes: classes,
-        region: formData.region === 'Bejaia' ? 0 : 1
+        region: formData.region === "Bejaia" ? 0 : 1,
       };
 
-      const response = await fetch('https://algerian-forest-fire-prediction-j2i8.onrender.com', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(apiPayload)
-      });
+      const response = await fetch(
+        "https://algerian-forest-fire-prediction-j2i8.onrender.com",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(apiPayload),
+        }
+      );
 
       const data = await response.json();
 
@@ -128,56 +135,67 @@ export default function PredictionForm() {
         setError(data.error || `API Error: ${response.status} ${response.statusText}`);
       }
     } catch (err) {
-      setError(err.message || 'Network error occurred');
+      setError(err.message || "Network error occurred");
     }
     setLoading(false);
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const closeModal = () => setShowModal(false);
 
   return (
-    <div className="max-w-lg mx-auto mt-10 bg-gray-800 p-8 rounded-2xl shadow-lg">
+    <div className="max-w-lg mx-auto mt-10 bg-[#0d1117] p-8 rounded-2xl border border-[#30363d] shadow-lg">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Forest Fire Risk Prediction</h1>
-        <p className="text-gray-300">Enter environmental conditions to assess fire risk</p>
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Forest Fire Risk Prediction
+        </h1>
+        <p className="text-[#8b949e]">
+          Enter environmental conditions to assess fire risk
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { label: "Temperature (°C)", name: "Temperature", placeholder: "25" },
-            { label: "Relative Humidity (%)", name: "RH", placeholder: "60" },
-            { label: "Wind Speed (km/h)", name: "Ws", placeholder: "15" },
-            { label: "Rainfall (mm)", name: "Rain", placeholder: "0" },
-            { label: "FFMC Index", name: "FFMC", placeholder: "85" },
-            { label: "DMC Index", name: "DMC", placeholder: "50" },
-            { label: "ISI Index", name: "ISI", placeholder: "8" },
-            { label: "Classes", name: "Classes", placeholder: "1" },
+            { label: "Temperature (°C)", name: "Temperature", placeholder: "25", min: -10, max: 50 },
+            { label: "Relative Humidity (%)", name: "RH", placeholder: "60", min: 0, max: 100 },
+            { label: "Wind Speed (km/h)", name: "Ws", placeholder: "15", min: 0, max: 100 },
+            { label: "Rainfall (mm)", name: "Rain", placeholder: "0", min: 0, max: 500 },
+            { label: "FFMC Index", name: "FFMC", placeholder: "85", min: 0, max: 101 },
+            { label: "DMC Index", name: "DMC", placeholder: "50", min: 0, max: 500 },
+            { label: "ISI Index", name: "ISI", placeholder: "8", min: 0, max: 50 },
+            { label: "Classes", name: "Classes", placeholder: "1", min: 0, max: 1 },
           ].map((field) => (
             <div key={field.name}>
-              <label className="block text-sm font-medium text-gray-200 mb-2">{field.label}</label>
+              <label className="block text-sm font-medium text-[#c9d1d9] mb-2">
+                {field.label}
+              </label>
               <input
                 type="number"
                 name={field.name}
                 value={formData[field.name]}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white placeholder:text-gray-600"
+                min={field.min}
+                max={field.max}
+                className="w-full px-3 py-2 border border-[#30363d] rounded-lg bg-[#161b22] text-white placeholder:text-[#484f58] focus:outline-none focus:ring-2 focus:ring-[#58a6ff]"
                 placeholder={field.placeholder}
                 required
               />
+              <p className="text-xs text-[#8b949e] mt-1">
+                Range: {field.min} – {field.max}
+              </p>
             </div>
           ))}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-200 mb-2">Region</label>
+          <label className="block text-sm font-medium text-[#c9d1d9] mb-2">
+            Region
+          </label>
           <select
             name="region"
             value={formData.region}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-700 text-white"
+            className="w-full px-3 py-2 border border-[#30363d] rounded-lg bg-[#161b22] text-white focus:outline-none focus:ring-2 focus:ring-[#58a6ff]"
             required
           >
             <option value="">Select a region</option>
@@ -189,7 +207,7 @@ export default function PredictionForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-lg font-medium transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-not-allowed"
+          className="w-full bg-[#238636] hover:bg-[#2ea043] disabled:bg-[#484f58] text-white py-3 px-4 rounded-lg font-medium transition-all duration-200"
         >
           {loading ? (
             <div className="flex items-center justify-center">
@@ -203,7 +221,7 @@ export default function PredictionForm() {
       </form>
 
       {error && (
-        <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
+        <div className="mt-6 p-4 bg-[#490202] border border-[#ff4d4d] rounded-lg">
           <div className="flex items-center">
             <div className="text-red-400 text-xl mr-2">❌</div>
             <p className="text-red-200">{error}</p>
@@ -214,7 +232,7 @@ export default function PredictionForm() {
       <div className="mt-6 text-center">
         <Link
           href="/dashboard"
-          className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+          className="text-[#58a6ff] hover:text-[#79c0ff] text-sm font-medium"
         >
           View your prediction history →
         </Link>
