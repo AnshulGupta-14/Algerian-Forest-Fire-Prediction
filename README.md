@@ -5,14 +5,14 @@ A comprehensive machine learning-based web application for predicting forest fir
 ## 🌟 Features
 
 ### **ML-Powered Predictions**
-- **Ridge Regression Model**: Advanced machine learning algorithm for accurate fire risk assessment
+- **Binary Classification Model**: Advanced machine learning algorithm for accurate fire risk assessment
 - **Real-time Analysis**: Instant predictions based on environmental parameters
-- **Risk Level Classification**: LOW, MEDIUM, HIGH, and EXTREME risk categories
+- **Risk Level Classification**: FIRE and NO FIRE risk categories
 
 ### **Interactive Dashboard**
 - **Prediction History**: Track all your previous predictions with detailed analytics
-- **Data Visualization**: Beautiful charts showing temperature trends, risk patterns, and distribution
-- **Summary Statistics**: Total predictions, average risk, highest/lowest risk scores
+- **Data Visualization**: Beautiful charts showing temperature trends, Fire Weather Index patterns, and risk distribution
+- **Summary Statistics**: Total predictions, average FWI, highest/lowest FWI scores
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
 ### **User Experience**
@@ -31,15 +31,21 @@ A comprehensive machine learning-based web application for predicting forest fir
 ```
 ML Project 1/
 ├── Backend/                          # Python Flask Backend
-│   ├── application.py               # Main Flask application
-│   ├── models/                      # Trained ML models
-│   │   ├── ridgereg.pkl            # Ridge Regression model
-│   │   └── scaler.pkl              # Data scaler
-│   ├── notebooks/                   # Jupyter notebooks
+│   ├── app.py                       # Main Flask application
+│   ├── src/                         # Source code
+│   │   ├── logger.py               # Logging configuration
+│   │   ├── exception.py            # Custom exception handling
+│   │   ├── utils.py                # Utility functions
+│   │   └── pipeline/               # ML pipeline
+│   │       ├── predict_pipeline.py # Prediction pipeline
+│   │       └── ...                 # Other pipeline components
+│   ├── notebooks/                  # Jupyter notebooks
 │   │   ├── 1.EDA&FeatureEngi.ipynb # Exploratory Data Analysis
 │   │   ├── 2.ModelTraining.ipynb   # Model Training
 │   │   └── Algerian_forest_fires_clean_dataset.csv
-│   └── requirements.txt             # Python dependencies
+│   ├── requirements.txt            # Python dependencies
+│   ├── setup.py                    # Package setup
+│   └── ...                         # Other backend files
 │
 └── Frontend/                        # Next.js Frontend
     ├── src/
@@ -47,14 +53,16 @@ ML Project 1/
     │   │   ├── page.js             # Home page with prediction form
     │   │   ├── about/page.js       # About page
     │   │   ├── dashboard/page.js   # Dashboard with charts
-    │   │   └── api/predict/        # API routes
-    │   ├── Components/              # React components
-    │   │   ├── Form.jsx            # Prediction form
-    │   │   ├── Navigation.jsx      # Navigation bar
-    │   │   └── DashboardChart.jsx  # Custom chart components
-    │   └── app/globals.css         # Global styles with custom scrollbars
+    │   │   └── ...                 # Other app pages
+    │   └── Components/              # React components
+    │       ├── Form.jsx            # Prediction form
+    │       ├── Navigation.jsx      # Navigation bar
+    │       ├── DashboardChart.jsx  # Custom chart components
+    │       └── ...                 # Other components
+    ├── public/                      # Static assets
     ├── package.json                 # Node.js dependencies
-    └── next.config.mjs             # Next.js configuration
+    ├── next.config.mjs             # Next.js configuration
+    └── ...                         # Other frontend files
 ```
 
 ## 🚀 Getting Started
@@ -76,17 +84,12 @@ ML Project 1/
    npm install
    ```
 
-3. **Install GSAP for smooth scrolling**
-   ```bash
-   npm install gsap
-   ```
-
-4. **Run the development server**
+3. **Run the development server**
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
+4. **Open your browser**
    Navigate to `http://localhost:3000`
 
 ### **Backend Setup**
@@ -99,7 +102,7 @@ ML Project 1/
 2. **Create virtual environment**
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\Scriptsctivate
    ```
 
 3. **Install Python dependencies**
@@ -107,9 +110,14 @@ ML Project 1/
    pip install -r requirements.txt
    ```
 
-4. **Run Flask application**
+4. **Install the package**
    ```bash
-   python application.py
+   pip install -e .
+   ```
+
+5. **Run Flask application**
+   ```bash
+   python app.py
    ```
 
 ## 📱 How to Use
@@ -121,9 +129,9 @@ ML Project 1/
   - **Relative Humidity** (%)
   - **Wind Speed** (km/h)
   - **Rainfall** (mm)
-  - **FFMC, DMC, ISI** (Fire Weather Index)
-  - **Region** selection
-- Click "Predict" to get instant fire risk assessment
+  - **FFMC, DMC, DC, ISI, BUI, FWI** (Fire Weather Index)
+  - **Region** selection (Bejaia or Sidi-Bel-Abbes)
+- Click "Predict Fire Risk" to get instant fire risk assessment
 
 ### **2. View Dashboard**
 - Click "Dashboard" in navigation
@@ -139,36 +147,37 @@ ML Project 1/
 ## 🛠️ Technologies Used
 
 ### **Frontend**
-- **Next.js 14**: React framework with App Router
+- **Next.js 15**: React framework with App Router
+- **React 19**: JavaScript library for building user interfaces
 - **Tailwind CSS**: Utility-first CSS framework
 - **GSAP**: High-performance animations and smooth scrolling
-- **Custom SVG Charts**: Lightweight, interactive data visualization
 
 ### **Backend**
 - **Python Flask**: Lightweight web framework
 - **Scikit-learn**: Machine learning library
-- **Ridge Regression**: ML algorithm for fire risk prediction
-- **Pickle**: Model serialization
+- **Hugging Face Hub**: Model hosting and deployment
+- **CatBoost & XGBoost**: ML algorithms for fire risk prediction
+- **Flask-CORS**: Cross-Origin Resource Sharing support
 
 ### **Data & ML**
 - **Algerian Forest Fires Dataset**: Historical fire data
 - **Feature Engineering**: Advanced data preprocessing
 - **Model Training**: Jupyter notebooks for ML pipeline
-- **Data Validation**: Input validation and error handling
+- **Model Deployment**: Using Hugging Face Hub for model hosting
 
 ## 📊 Machine Learning Model
 
-### **Algorithm**: Ridge Regression
-- **Type**: Linear regression with L2 regularization
-- **Purpose**: Predict forest fire risk based on environmental factors
-- **Features**: Temperature, humidity, wind, rainfall, fire weather indices
-- **Output**: Continuous risk score (0-100)
+### **Algorithm**: Binary Classification
+- **Type**: Classification model predicting FIRE or NO FIRE
+- **Purpose**: Predict forest fire occurrence based on environmental factors
+- **Features**: Temperature, humidity, wind, rainfall, fire weather indices (FFMC, DMC, DC, ISI, BUI, FWI)
+- **Output**: Binary classification (0: FIRE, 1: NO FIRE)
 
 ### **Model Performance**
 - **Training Data**: Historical Algerian forest fire records
 - **Validation**: Cross-validation for robust performance
-- **Scalability**: Handles various environmental conditions
-- **Accuracy**: Optimized for real-world fire risk assessment
+- **Deployment**: Hosted on Hugging Face Hub for easy access
+- **Integration**: Seamlessly integrated with Flask backend
 
 ## 🎨 Custom Features
 
@@ -192,18 +201,23 @@ ML Project 1/
 ### **Environment Variables**
 ```bash
 # Frontend
-NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_API_URL=https://algerian-forest-fire-prediction-j2i8.onrender.com
 
 # Backend
 FLASK_ENV=development
 FLASK_DEBUG=1
+HF_MODEL_REPO=your-huggingface-repo
+HF_MODEL_FILENAME=model.pkl
+HF_PREPROCESSOR_FILENAME=preprocessor.pkl
+HF_MODEL_REVISION=main
+HF_TOKEN=your-huggingface-token
 ```
 
 ### **Customization**
 - **Colors**: Modify Tailwind CSS classes
 - **Animations**: Adjust GSAP timing and easing
 - **Charts**: Customize chart colors and styles
-- **Scrollbars**: Modify scrollbar appearance in `globals.css`
+- **Scrollbars**: Modify scrollbar appearance in global styles
 
 ## 🚀 Deployment
 
@@ -218,6 +232,12 @@ FLASK_DEBUG=1
 2. Install Python dependencies
 3. Set environment variables
 4. Deploy Flask application
+
+### **Model Deployment (Hugging Face Hub)**
+1. Train and save your model
+2. Upload model and preprocessor to Hugging Face Hub
+3. Configure environment variables for model access
+4. Integrate with Flask backend
 
 ## 🤝 Contributing
 
@@ -234,9 +254,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🙏 Acknowledgments
 
 - **Dataset**: Algerian Forest Fires Dataset
-- **ML Framework**: Scikit-learn community
+- **ML Framework**: Scikit-learn, CatBoost, and XGBoost communities
 - **Frontend**: Next.js and React communities
 - **Animations**: GSAP team for smooth scrolling
+- **Model Hosting**: Hugging Face for model deployment
 
 ## 📞 Support
 
