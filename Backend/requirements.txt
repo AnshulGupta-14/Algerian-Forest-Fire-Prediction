@@ -1,6 +1,15 @@
-Flask
+setuptools
 numpy
 pandas
-scikit-learn  
-gunicorn  
+seaborn
+matplotlib
+scikit-learn
+catboost
+xgboost
+dill
+flask
 flask_cors
+gunicorn
+huggingface_hub
+dotenv
+-e .

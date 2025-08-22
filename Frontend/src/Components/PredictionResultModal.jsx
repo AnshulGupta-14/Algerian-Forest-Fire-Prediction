@@ -26,32 +26,17 @@ const PredictionResultModal = ({ isOpen, onClose, prediction, formData }) => {
   }, [isOpen]);
 
   const getRiskLevel = (predictionValue) => {
-    if (predictionValue < 5)
+    if (predictionValue == 1)
       return {
-        level: "LOW",
+        level: "LOW CHANCE",
         color: "text-green-400",
         bgColor: "bg-green-900/30",
         icon: "🟢",
         description: "Minimal fire risk",
       };
-    if (predictionValue < 15)
-      return {
-        level: "MEDIUM",
-        color: "text-yellow-400",
-        bgColor: "bg-yellow-900/30",
-        icon: "🟡",
-        description: "Moderate fire risk",
-      };
-    if (predictionValue < 30)
-      return {
-        level: "HIGH",
-        color: "text-orange-400",
-        bgColor: "bg-orange-900/30",
-        icon: "🟠",
-        description: "High fire risk",
-      };
+
     return {
-      level: "EXTREME",
+      level: "HIGH CHANCE",
       color: "text-red-500",
       bgColor: "bg-red-900/30",
       icon: "🔴",
@@ -63,10 +48,6 @@ const PredictionResultModal = ({ isOpen, onClose, prediction, formData }) => {
     switch (riskLevel) {
       case "LOW":
         return "Continue monitoring conditions. Fire risk is minimal.";
-      case "MEDIUM":
-        return "Exercise caution. Monitor weather closely.";
-      case "HIGH":
-        return "High alert! Implement fire prevention measures.";
       case "EXTREME":
         return "CRITICAL! Immediate action required.";
       default:
@@ -74,8 +55,7 @@ const PredictionResultModal = ({ isOpen, onClose, prediction, formData }) => {
     }
   };
 
-  const roundedPrediction = Math.round(prediction * 100) / 100;
-  const riskInfo = getRiskLevel(roundedPrediction);
+  const riskInfo = getRiskLevel(prediction);
 
   if (!isVisible) return null;
 
@@ -137,20 +117,6 @@ const PredictionResultModal = ({ isOpen, onClose, prediction, formData }) => {
             <p className="text-gray-400 text-sm">{riskInfo.description}</p>
           </div>
 
-          {/* Prediction Score */}
-          <div
-            className={`bg-[#161b22] rounded-xl p-4 mb-6 text-center border border-[#30363d] transition-all duration-700 delay-300 ${
-              animationStep >= 3
-                ? "translate-y-0 opacity-100"
-                : "translate-y-4 opacity-0"
-            }`}
-          >
-            <div className="text-4xl font-bold text-white mb-2">
-              {roundedPrediction}
-            </div>
-            <div className="text-gray-400">Risk Score</div>
-          </div>
-
           {/* Environmental Factors */}
           <div
             className={`mb-6 transition-all duration-700 delay-400 ${
@@ -187,6 +153,13 @@ const PredictionResultModal = ({ isOpen, onClose, prediction, formData }) => {
                 <div className="text-sm text-gray-400">Rainfall</div>
                 <div className="font-semibold text-white">
                   {formData.Rain} mm
+                </div>
+              </div>
+              <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-3 text-center">
+                <div className="text-2xl mb-1">🔥</div>
+                <div className="text-sm text-gray-400">Fire Weather Index</div>
+                <div className="font-semibold text-white">
+                  {formData.FWI}
                 </div>
               </div>
             </div>

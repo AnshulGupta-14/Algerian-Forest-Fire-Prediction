@@ -11,8 +11,10 @@ export default function PredictionForm() {
     FFMC: "",
     DMC: "",
     ISI: "",
-    Classes: "",
     region: "",
+    FWI: "",
+    BUI: "",
+    DC: "",
   });
 
   const [prediction, setPrediction] = useState(null);
@@ -24,8 +26,7 @@ export default function PredictionForm() {
     const { name, value } = e.target;
     const numValue = parseFloat(value);
 
-    // prevent negative values
-    if (["Temperature", "RH", "Ws", "Rain", "FFMC", "DMC", "ISI", "Classes"].includes(name)) {
+    if (["Temperature", "RH", "Ws", "Rain", "FFMC", "DMC", "ISI", "DC", "FWI", "BUI"].includes(name)) {
       if (value !== "" && isNaN(numValue)) return;
     }
 
@@ -47,9 +48,9 @@ export default function PredictionForm() {
         humidity: parseFloat(formData.RH) || 0,
         windSpeed: parseFloat(formData.Ws) || 0,
         rainfall: parseFloat(formData.Rain) || 0,
-        prediction: predictionData.prediction,
-        risk: getRiskLevel(predictionData.prediction),
+        FireWeatherIndex: parseFloat(formData.FWI) || 0,
         region: region || "Algeria",
+        prediction: getRiskLevel(predictionData.prediction),
       };
 
       predictions.unshift(newPrediction);
@@ -60,10 +61,9 @@ export default function PredictionForm() {
   };
 
   const getRiskLevel = (predictionValue) => {
-    if (predictionValue < 5) return "LOW";
-    if (predictionValue < 15) return "MEDIUM";
-    if (predictionValue < 30) return "HIGH";
-    return "EXTREME";
+    if (predictionValue === 1) return "NO FIRE";
+    if (predictionValue === 0) return "FIRE";
+    return "UNKNOWN";
   };
 
   const handleSubmit = async (e) => {
@@ -86,7 +86,9 @@ export default function PredictionForm() {
       const ffmc = parseFloat(formData.FFMC);
       const dmc = parseFloat(formData.DMC);
       const isi = parseFloat(formData.ISI);
-      const classes = parseFloat(formData.Classes);
+      const fwi = parseFloat(formData.FWI);
+      const bui = parseFloat(formData.BUI);
+      const dc = parseFloat(formData.DC);
 
       if (
         isNaN(temperature) ||
@@ -96,7 +98,9 @@ export default function PredictionForm() {
         isNaN(ffmc) ||
         isNaN(dmc) ||
         isNaN(isi) ||
-        isNaN(classes)
+        isNaN(fwi) ||
+        isNaN(bui) ||
+        isNaN(dc)
       ) {
         setError("Please fill in all numeric fields with valid numbers");
         setLoading(false);
@@ -111,7 +115,9 @@ export default function PredictionForm() {
         FFMC: ffmc,
         DMC: dmc,
         ISI: isi,
-        Classes: classes,
+        FWI: fwi,
+        BUI: bui,
+        DC: dc,
         region: formData.region === "Bejaia" ? 0 : 1,
       };
 
@@ -127,9 +133,8 @@ export default function PredictionForm() {
       const data = await response.json();
 
       if (response.ok) {
-        const roundedPrediction = Math.round(data.prediction * 100) / 100;
-        setPrediction(roundedPrediction);
-        savePredictionToHistory({ prediction: roundedPrediction }, formData.region);
+        setPrediction(data.prediction);
+        savePredictionToHistory({ prediction: data.prediction }, formData.region);
         setShowModal(true);
       } else {
         setError(data.error || `API Error: ${response.status} ${response.statusText}`);
@@ -143,7 +148,7 @@ export default function PredictionForm() {
   const closeModal = () => setShowModal(false);
 
   return (
-    <div className="max-w-lg mx-auto mt-10 bg-[#0d1117] p-8 rounded-2xl border border-[#30363d] shadow-lg">
+    <div className="max-w-3xl mx-auto mt-10 bg-[#0d1117] p-8 rounded-2xl border border-[#30363d] shadow-lg">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">
           Forest Fire Risk Prediction
@@ -163,7 +168,9 @@ export default function PredictionForm() {
             { label: "FFMC Index", name: "FFMC", placeholder: "85", min: 0, max: 101 },
             { label: "DMC Index", name: "DMC", placeholder: "50", min: 0, max: 500 },
             { label: "ISI Index", name: "ISI", placeholder: "8", min: 0, max: 50 },
-            { label: "Classes", name: "Classes", placeholder: "1", min: 0, max: 1 },
+            { label: "BUI Index", name: "BUI", placeholder: "60", min: 0, max: 500 },
+            { label: "DC Index", name: "DC", placeholder: "200", min: 0, max: 1000 },
+            { label: "FWI Index", name: "FWI", placeholder: "15", min: 0, max: 100 },
           ].map((field) => (
             <div key={field.name}>
               <label className="block text-sm font-medium text-[#c9d1d9] mb-2">

@@ -60,19 +60,19 @@ function DashboardPage() {
 
     const predictionTrend = last5.map((pred, i) => ({
       x: i + 1,
-      y: pred.prediction,
+      y: pred.FireWeatherIndex,
       label: pred.date,
     }));
 
     const riskCounts = predictions.reduce((acc, pred) => {
-      acc[pred.risk] = (acc[pred.risk] || 0) + 1;
+      acc[pred.prediction] = (acc[pred.prediction] || 0) + 1;
       return acc;
     }, {});
 
-    const riskDistribution = Object.entries(riskCounts).map(([risk, count]) => ({
-      x: risk,
+    const riskDistribution = Object.entries(riskCounts).map(([pred, count]) => ({
+      x: pred,
       y: count,
-      label: risk,
+      label: pred,
     }));
 
     return { temperatureTrend, predictionTrend, riskDistribution };
@@ -83,7 +83,7 @@ function DashboardPage() {
     if (predictions.length === 0) {
       return { total: 0, average: 0, highest: 0, lowest: 0 };
     }
-    const values = predictions.map((p) => p.prediction);
+    const values = predictions.map((p) => p.FireWeatherIndex);
     return {
       total: predictions.length,
       average: (values.reduce((s, v) => s + v, 0) / values.length).toFixed(1),
@@ -95,13 +95,9 @@ function DashboardPage() {
   // Risk styles
   const getRiskColor = useCallback((risk) => {
     switch (risk) {
-      case "LOW":
+      case "NO FIRE":
         return "text-green-400";
-      case "MEDIUM":
-        return "text-yellow-400";
-      case "HIGH":
-        return "text-orange-400";
-      case "EXTREME":
+      case "FIRE":
         return "text-red-400";
       default:
         return "text-gray-400";
@@ -111,11 +107,6 @@ function DashboardPage() {
   const getRiskBgColor = useCallback((risk) => {
     switch (risk) {
       case "LOW":
-        return "bg-green-500/20";
-      case "MEDIUM":
-        return "bg-yellow-500/20";
-      case "HIGH":
-        return "bg-orange-500/20";
       case "EXTREME":
         return "bg-red-500/20";
       default:
@@ -252,19 +243,19 @@ function DashboardPage() {
               </div>
             </div>
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
-              <h3 className="text-lg font-semibold mb-2">Average Risk</h3>
+              <h3 className="text-lg font-semibold mb-2">Average FWI</h3>
               <div className="text-3xl font-bold text-orange-400">
                 {summaryStats.average}
               </div>
             </div>
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
-              <h3 className="text-lg font-semibold mb-2">Highest Risk</h3>
+              <h3 className="text-lg font-semibold mb-2">Highest FWI</h3>
               <div className="text-3xl font-bold text-red-400">
                 {summaryStats.highest}
               </div>
             </div>
             <div className="bg-[#161b22] border border-[#30363d] rounded-lg p-6 text-center hover:bg-[#21262d] transition-all duration-300">
-              <h3 className="text-lg font-semibold mb-2">Lowest Risk</h3>
+              <h3 className="text-lg font-semibold mb-2">Lowest FWI</h3>
               <div className="text-3xl font-bold text-green-400">
                 {summaryStats.lowest}
               </div>
@@ -285,7 +276,7 @@ function DashboardPage() {
             <DashboardChart
               data={chartData.predictionTrend}
               type="line"
-              title="Fire Risk Trend (Last 5 Predictions)"
+              title="Fire Weather Index (Last 5 Predictions)"
               height={250}
             />
           </div>
@@ -317,7 +308,7 @@ function DashboardPage() {
                       "Humidity",
                       "Wind",
                       "Rainfall",
-                      "Risk Score",
+                      "FWI",
                       "Risk Level",
                     ].map((h) => (
                       <th
@@ -351,15 +342,15 @@ function DashboardPage() {
                         {parseFloat(prediction.rainfall).toFixed(1)} mm
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-[#c9d1d9]">
-                        {parseFloat(prediction.prediction).toFixed(1)}
+                        {parseFloat(prediction.FireWeatherIndex).toFixed(1)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskBgColor(
                             prediction.risk
-                          )} ${getRiskColor(prediction.risk)}`}
+                          )} ${getRiskColor(prediction.prediction)}`}
                         >
-                          {prediction.risk}
+                          {prediction.prediction}
                         </span>
                       </td>
                     </tr>
